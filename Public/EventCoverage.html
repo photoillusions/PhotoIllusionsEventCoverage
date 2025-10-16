@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Coverage Package - Photo Illusions</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            padding: 35px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        h2 {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 35px 0 20px 0;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h2::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.2s;
+            background: white;
+            color: #2d3748;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='7' viewBox='0 0 12 7' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px;
+        }
+
+        .time-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        #card-element {
+            padding: 14px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        #card-element.StripeElement--focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        #card-errors {
+            color: #e53e3e;
+            margin-top: 8px;
+            font-size: 13px;
+            min-height: 20px;
+        }
+
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            margin-top: 25px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .loader {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #response-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #response-message.success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            display: block;
+        }
+
+        #response-message.error {
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+            color: white;
+            display: block;
+        }
+
+        .price-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 25px 0;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        .price-display .amount {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .price-display .description {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .time-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Photo Illusions</h1>
+            <p class="subtitle">Event Coverage Package Registration</p>
+        </div>
+
+        <form id="payment-form">
+            <h2>Contact Information</h2>
+            
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" required>
+            </div>
+
+            <h2>Event Details</h2>
+
+            <div class="form-group">
+                <label for="eventTitle">Event Title</label>
+                <input type="text" id="eventTitle" name="eventTitle" placeholder="e.g., Sarah's Sweet 16, Johnson Wedding Reception" required>
+            </div>
+
+            <div class="form-group">
+                <label for="venueName">Name of Venue</label>
+                <input type="text" id="venueName" name="venueName" placeholder="e.g., Grand Ballroom, Riverside Park Pavilion" required>
+            </div>
+
+            <div class="form-group">
+                <label for="eventDate">Event Date</label>
+                <input type="date" id="eventDate" name="eventDate" required>
+            </div>
+
+            <div class="time-section">
+                <div class="form-group">
+                    <label for="startTime">Start Time</label>
+                    <select id="startTime" name="startTime" required>
+                        <option value="">Select time</option>
+                        <option value="6:00 AM">6:00 AM</option>
+                        <option value="6:30 AM">6:30 AM</option>
+                        <option value="7:00 AM">7:00 AM</option>
+                        <option value="7:30 AM">7:30 AM</option>
+                        <option value="8:00 AM">8:00 AM</option>
+                        <option value="8:30 AM">8:30 AM</option>
+                        <option value="9:00 AM">9:00 AM</option>
+                        <option value="9:30 AM">9:30 AM</option>
+                        <option value="10:00 AM">10:00 AM</option>
+                        <option value="10:30 AM">10:30 AM</option>
+                        <option value="11:00 AM">11:00 AM</option>
+                        <option value="11:30 AM">11:30 AM</option>
+                        <option value="12:00 PM">12:00 PM</option>
+                        <option value="12:30 PM">12:30 PM</option>
+                        <option value="1:00 PM">1:00 PM</option>
+                        <option value="1:30 PM">1:30 PM</option>
+                        <option value="2:00 PM">2:00 PM</option>
+                        <option value="2:30 PM">2:30 PM</option>
+                        <option value="3:00 PM">3:00 PM</option>
+                        <option value="3:30 PM">3:30 PM</option>
+                        <option value="4:00 PM">4:00 PM</option>
+                        <option value="4:30 PM">4:30 PM</option>
+                        <option value="5:00 PM">5:00 PM</option>
+                        <option value="5:30 PM">5:30 PM</option>
+                        <option value="6:00 PM">6:00 PM</option>
+                        <option value="6:30 PM">6:30 PM</option>
+                        <option value="7:00 PM">7:00 PM</option>
+                        <option value="7:30 PM">7:30 PM</option>
+                        <option value="8:00 PM">8:00 PM</option>
+                        <option value="8:30 PM">8:30 PM</option>
+                        <option value="9:00 PM">9:00 PM</option>
+                        <option value="9:30 PM">9:30 PM</option>
+                        <option value="10:00 PM">10:00 PM</option>
+                        <option value="10:30 PM">10:30 PM</option>
+                        <option value="11:00 PM">11:00 PM</option>
+                        <option value="11:30 PM">11:30 PM</option>
+                        <option value="12:00 AM">12:00 AM</option>
+                        <option value="12:30 AM">12:30 AM</option>
+                        <option value="1:00 AM">1:00 AM</option>
+                        <option value="1:30 AM">1:30 AM</option>
+                        <option value="2:00 AM">2:00 AM</option>
+                        <option value="2:30 AM">2:30 AM</option>
+                        <option value="3:00 AM">3:00 AM</option>
+                        <option value="3:30 AM">3:30 AM</option>
+                        <option value="4:00 AM">4:00 AM</option>
+                        <option value="4:30 AM">4:30 AM</option>
+                        <option value="5:00 AM">5:00 AM</option>
+                        <option value="5:30 AM">5:30 AM</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="endTime">End Time</label>
+                    <select id="endTime" name="endTime" required>
+                        <option value="">Select time</option>
+                        <option value="6:00 AM">6:00 AM</option>
+                        <option value="6:30 AM">6:30 AM</option>
+                        <option value="7:00 AM">7:00 AM</option>
+                        <option value="7:30 AM">7:30 AM</option>
+                        <option value="8:00 AM">8:00 AM</option>
+                        <option value="8:30 AM">8:30 AM</option>
+                        <option value="9:00 AM">9:00 AM</option>
+                        <option value="9:30 AM">9:30 AM</option>
+                        <option value="10:00 AM">10:00 AM</option>
+                        <option value="10:30 AM">10:30 AM</option>
+                        <option value="11:00 AM">11:00 AM</option>
+                        <option value="11:30 AM">11:30 AM</option>
+                        <option value="12:00 PM">12:00 PM</option>
+                        <option value="12:30 PM">12:30 PM</option>
+                        <option value="1:00 PM">1:00 PM</option>
+                        <option value="1:30 PM">1:30 PM</option>
+                        <option value="2:00 PM">2:00 PM</option>
+                        <option value="2:30 PM">2:30 PM</option>
+                        <option value="3:00 PM">3:00 PM</option>
+                        <option value="3:30 PM">3:30 PM</option>
+                        <option value="4:00 PM">4:00 PM</option>
+                        <option value="4:30 PM">4:30 PM</option>
+                        <option value="5:00 PM">5:00 PM</option>
+                        <option value="5:30 PM">5:30 PM</option>
+                        <option value="6:00 PM">6:00 PM</option>
+                        <option value="6:30 PM">6:30 PM</option>
+                        <option value="7:00 PM">7:00 PM</option>
+                        <option value="7:30 PM">7:30 PM</option>
+                        <option value="8:00 PM">8:00 PM</option>
+                        <option value="8:30 PM">8:30 PM</option>
+                        <option value="9:00 PM">9:00 PM</option>
+                        <option value="9:30 PM">9:30 PM</option>
+                        <option value="10:00 PM">10:00 PM</option>
+                        <option value="10:30 PM">10:30 PM</option>
+                        <option value="11:00 PM">11:00 PM</option>
+                        <option value="11:30 PM">11:30 PM</option>
+                        <option value="12:00 AM">12:00 AM</option>
+                        <option value="12:30 AM">12:30 AM</option>
+                        <option value="1:00 AM">1:00 AM</option>
+                        <option value="1:30 AM">1:30 AM</option>
+                        <option value="2:00 AM">2:00 AM</option>
+                        <option value="2:30 AM">2:30 AM</option>
+                        <option value="3:00 AM">3:00 AM</option>
+                        <option value="3:30 AM">3:30 AM</option>
+                        <option value="4:00 AM">4:00 AM</option>
+                        <option value="4:30 AM">4:30 AM</option>
+                        <option value="5:00 AM">5:00 AM</option>
+                        <option value="5:30 AM">5:30 AM</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="location">Event Address</label>
+                <input type="text" id="location" name="location" placeholder="Full venue address" required>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Additional Notes (Optional)</label>
+                <textarea id="notes" name="notes" placeholder="Any special requests or details..."></textarea>
+            </div>
+
+            <div class="price-display">
+                <div class="amount">$650.00</div>
+                <div class="description">Event Coverage Package - Total Price</div>
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
+                    <div style="font-size: 13px; text-align: left; line-height: 1.8; opacity: 0.95;">
+                        <strong>Package Includes:</strong><br>
+                        • 2-3 Professional Photographers<br>
+                        • 250 Digitally Enhanced Photos<br>
+                        • Downloadable Online Photo Gallery<br>
+                        • Up to 5 Hours On Location<br>
+                        • Digital Entertainment with Onsite Printing<br>
+                        <span style="font-size: 12px; opacity: 0.9;">&nbsp;&nbsp;($10 per 8x10 print - table near electricity required)</span>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Payment Information</h2>
+
+            <div class="form-group">
+                <label for="paymentAmount">Payment Amount (Minimum $5)</label>
+                <div style="position: relative;">
+                    <span style="position: absolute; left: 15px; top: 12px; color: #4a5568; font-size: 15px; font-weight: 500;">$</span>
+                    <input type="number" id="paymentAmount" name="paymentAmount" min="5" max="650" step="0.01" placeholder="Enter amount to pay now" required style="padding-left: 30px;">
+                </div>
+                <div style="margin-top: 8px; font-size: 13px; color: #718096;">
+                    <div id="remainingBalance" style="color: #667eea; font-weight: 500;"></div>
+                    <div style="margin-top: 4px;">You can pay any amount between $5 and $650. The remaining balance will be due before your event.</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="card-element">Credit or Debit Card</label>
+                <div id="card-element"></div>
+                <div id="card-errors" role="alert"></div>
+            </div>
+
+            <button type="submit">
+                <span id="button-text">Process Payment</span>
+                <span class="loader" style="display: none;"></span>
+            </button>
+
+            <div id="response-message"></div>
+        </form>
+    </div>
+
+    <script>
+        // Initialize Stripe - REPLACE WITH YOUR PUBLISHABLE KEY
+        const stripe = Stripe('pk_test_hzOQi3EwdLc00cBWEgu9vh3l');
+        const elements = stripe.elements();
+
+        // Style for card element
+        const style = {
+            base: {
+                fontSize: '15px',
+                color: '#2d3748',
+                '::placeholder': {
+                    color: '#a0aec0',
+                }
+            },
+            invalid: {
+                color: '#e53e3e',
+            }
+        };
+
+        // Create card element
+        const cardElement = elements.create('card', { style: style });
+        cardElement.mount('#card-element');
+
+        // Handle card errors
+        cardElement.on('change', function(event) {
+            const displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        });
+
+        // Calculate and display remaining balance
+        const paymentAmountInput = document.getElementById('paymentAmount');
+        const remainingBalanceDiv = document.getElementById('remainingBalance');
+        const buttonText = document.getElementById('button-text');
+        
+        function updateBalance() {
+            const paymentAmount = parseFloat(paymentAmountInput.value) || 0;
+            const totalPrice = 650;
+            const remaining = totalPrice - paymentAmount;
+            
+            if (paymentAmount > 0 && paymentAmount <= totalPrice) {
+                if (paymentAmount === totalPrice) {
+                    remainingBalanceDiv.textContent = '✓ Full payment - No balance remaining';
+                    buttonText.textContent = `Pay ${paymentAmount.toFixed(2)} (Full Payment)`;
+                } else {
+                    remainingBalanceDiv.textContent = `Remaining balance after this payment: ${remaining.toFixed(2)}`;
+                    buttonText.textContent = `Pay ${paymentAmount.toFixed(2)} Now`;
+                }
+            } else if (paymentAmount > totalPrice) {
+                remainingBalanceDiv.textContent = 'Amount exceeds package price';
+                remainingBalanceDiv.style.color = '#e53e3e';
+            } else {
+                remainingBalanceDiv.textContent = '';
+                buttonText.textContent = 'Process Payment';
+            }
+        }
+        
+        paymentAmountInput.addEventListener('input', updateBalance);
+
+        // Handle form submission
+        const form = document.getElementById('payment-form');
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            // Validate payment amount
+            const paymentAmount = parseFloat(document.getElementById('paymentAmount').value);
+            if (paymentAmount < 5 || paymentAmount > 650) {
+                showMessage('Please enter an amount between $5 and $650', 'error');
+                return;
+            }
+
+            // Disable button and show loader
+            const submitButton = form.querySelector('button');
+            submitButton.disabled = true;
+            document.getElementById('button-text').style.display = 'none';
+            document.querySelector('.loader').style.display = 'inline-block';
+
+            // Collect form data
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                eventTitle: document.getElementById('eventTitle').value,
+                venueName: document.getElementById('venueName').value,
+                eventDate: document.getElementById('eventDate').value,
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                location: document.getElementById('location').value,
+                notes: document.getElementById('notes').value,
+                amount: Math.round(paymentAmount * 100), // Convert to cents
+                totalPackagePrice: 65000, // $650.00 in cents
+                remainingBalance: Math.round((650 - paymentAmount) * 100) // Remaining balance in cents
+            };
+
+            try {
+                // Create payment intent on server
+                const response = await fetch('/create-payment-intent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Payment failed');
+                }
+
+                // Confirm the payment
+                const result = await stripe.confirmCardPayment(data.clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                        billing_details: {
+                            name: formData.name,
+                            email: formData.email,
+                            phone: formData.phone
+                        }
+                    }
+                });
+
+                if (result.error) {
+                    throw new Error(result.error.message);
+                } else {
+                    // Payment succeeded
+                    const remainingBalance = 650 - paymentAmount;
+                    let successMessage = `Payment of ${paymentAmount.toFixed(2)} successful! `;
+                    if (remainingBalance > 0) {
+                        successMessage += `Remaining balance: ${remainingBalance.toFixed(2)}`;
+                    } else {
+                        successMessage += 'Package fully paid. Thank you!';
+                    }
+                    showMessage(successMessage, 'success');
+                    
+                    // Redirect to thank you page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/thank-you.html';
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage(error.message || 'An error occurred. Please try again.', 'error');
+            } finally {
+                // Re-enable button
+                submitButton.disabled = false;
+                document.getElementById('button-text').style.display = 'inline';
+                document.querySelector('.loader').style.display = 'none';
+            }
+        });
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('response-message');
+            messageDiv.textContent = text;
+            messageDiv.className = type;
+        }
+    </script>
+</body>
+</html>
